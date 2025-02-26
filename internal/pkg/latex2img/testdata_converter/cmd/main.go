@@ -16,7 +16,8 @@ import (
 func main() {
     pathToTestdata := flag.String("path", "testdata", "path to testdata")
     flag.Parse()
-
+    
+    createTmpIfNotExists()
     converter := latex2img.NewPlainLatexToImgConverter("tmp", params.ImageDPI())
     
     for _, file := range params.CorrectTestdataFiles() {
