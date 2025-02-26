@@ -8,3 +8,4 @@ RUN apt-get install -y golang-go
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
+WORKDIR /

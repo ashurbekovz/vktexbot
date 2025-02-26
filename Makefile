@@ -1,9 +1,11 @@
+ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+
 IMAGE_NAME = vktex_proj
 CONTAINER_NAME = vktex_container
 TESTDATA_DIR = internal/pkg/latex2img/testdata
 
 build:
-	docker build -t $(IMAGE_NAME) .
+	docker build -t $(IMAGE_NAME) $(ROOT_DIR)
 
 run_container:
 	@if docker ps -a --format '{{.Names}}' | grep -q "^$(CONTAINER_NAME)$$"; then \
@@ -25,14 +27,14 @@ remove_container:
 
 generate_testdata:
 	make run_container
-	docker cp ./ $(CONTAINER_NAME):./
+	docker cp $(ROOT_DIR)/. $(CONTAINER_NAME):/app/
 	docker exec $(CONTAINER_NAME) bash -c \
-		"cd internal/pkg/latex2img/testdata_converter/cmd/ && \
+		"cd /app/internal/pkg/latex2img/testdata_converter/cmd/ && \
 		go run main.go -path ./../../testdata"
-	docker cp $(CONTAINER_NAME):./internal/pkg/latex2img/testdata ./internal/pkg/latex2img/
+	docker cp $(CONTAINER_NAME):/app/internal/pkg/latex2img/testdata $(ROOT_DIR)/internal/pkg/latex2img/
 
 test:
 	make run_container
-	docker cp ./ $(CONTAINER_NAME):/sources
+	docker cp $(ROOT_DIR)/ $(CONTAINER_NAME):/sources
 	docker exec $(CONTAINER_NAME) bash -c "cd sources && go test ./..."
 	
