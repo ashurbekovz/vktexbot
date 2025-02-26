@@ -1,12 +1,12 @@
 package latex2img
 
 import (
-    "context"
-    "fmt"
-    "image"
-    "os"
-    "os/exec"
-    "path/filepath"
+	"context"
+	"fmt"
+	"image"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 type PlainLatexToImgConverter struct {
@@ -24,19 +24,19 @@ func NewPlainLatexToImgConverter(
 }
 
 func (c *PlainLatexToImgConverter) Convert(ctx context.Context, content []byte) (image.Image, error) {
-    tempDir, err := os.MkdirTemp(c.workDir, "latex")
+    tempDir, err := os.MkdirTemp(c.workDir, "latex-")
     if err != nil {
         return nil, fmt.Errorf("cant create tempdir: %w", err)
     }
     defer os.RemoveAll(tempDir)
 
-    const latexResFilename = "result"
-    err = compileLatex(ctx, tempDir, latexResFilename, content)
+    const latexResFile = "result"
+    err = compileLatex(ctx, tempDir, latexResFile, content)
     if err != nil {
         return nil, err
     }
 
-    image, err := dvi2img(ctx, tempDir, latexResFilename, c.imageDPI)
+    image, err := dvi2img(ctx, tempDir, latexResFile, c.imageDPI)
     if err != nil {
         return nil, err
     }
@@ -44,11 +44,11 @@ func (c *PlainLatexToImgConverter) Convert(ctx context.Context, content []byte) 
     return image, nil
 }
 
-// compileLatex compile latex file with context to `tempDir`/`resFilename`.dvi file. 
+// compileLatex compile latex file with context to `tempDir`/`resFile`.dvi file. 
 // Some spin-off files can some side files may be created in tempDir.
 func compileLatex(
     ctx context.Context,
-    tempDir, resFilename string,
+    tempDir, resFile string,
     content []byte,
 ) error {
     texFile := filepath.Join(tempDir, "document.tex")
@@ -60,7 +60,7 @@ func compileLatex(
         ctx,
         "latex",
         "-interaction", "nonstopmode",
-        "-jobname", resFilename,
+        "-jobname", resFile,
         "document.tex",
     )
     latexCmd.Dir = tempDir
@@ -72,11 +72,11 @@ func compileLatex(
     return nil
 }
 
-// dvi2img get `tempDir`/`inFilename`.dvi file and convert it to rasterized image.Image.
+// dvi2img get `tempDir`/`inFile`.dvi file and convert it to rasterized image.Image.
 // Some spin-off files can some side files may be created in tempDir.
 func dvi2img(
     ctx context.Context,
-    tempDir, inFilename string,
+    tempDir, inFile string,
     dpi string,
 ) (image.Image, error) {
     pngFile := filepath.Join(tempDir, "output.png")
@@ -87,7 +87,7 @@ func dvi2img(
         "-T", "Tight",
         "-bg", "Transparent",
         "-o", "output.png",
-        inFilename + ".dvi",
+        inFile + ".dvi",
     )
     dvipngCmd.Dir = tempDir
     output, err := dvipngCmd.CombinedOutput()
