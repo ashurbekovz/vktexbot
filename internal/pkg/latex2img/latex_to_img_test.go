@@ -2,6 +2,7 @@ package latex2img
 
 import (
 	"context"
+	"image"
 	"image/png"
 	"os"
 	"path/filepath"
@@ -36,23 +37,36 @@ func (s *PlainLatexToImgConverterTestSuite) SetupSuite() {
 	s.pathToTestdata = "testdata/"
 }
 
-func (s *PlainLatexToImgConverterTestSuite) TestCorrectTexFiles() {
+func (s *PlainLatexToImgConverterTestSuite) TestConvert_EqualToGeneratedPngs_WhenCorrectTexFiles() {
 	for _, file := range params.CorrectTestdataFiles() {
-		path := filepath.Join(s.pathToTestdata, file)
+        s.Run(s.pathToTestdata, func() {
+            path := filepath.Join(s.pathToTestdata, file)
 
-		content, err := os.ReadFile(path)
-		s.Require().NoError(err)
+            img := s.convertImgFromFile(path)
 
-		img, err := s.converter.Convert(context.Background(), content)
-		s.Require().NoError(err)
-
-		file, err := os.Open(strings.TrimSuffix(path, ".tex") + ".png")
-		s.Require().NoError(err)
-
-		expectedImg, err := png.Decode(file)
-		file.Close()
-		s.Require().NoError(err)
-
-		s.Require().Equal(expectedImg, img)
+            s.imgEqualToImgFromFile(img, strings.TrimSuffix(path, ".tex") + ".png") 
+        })
 	}
+}
+
+// Helpers
+
+func (s *PlainLatexToImgConverterTestSuite) imgEqualToImgFromFile(img image.Image, expectedImgPath string) {
+    file, err := os.Open(expectedImgPath)
+    s.Require().NoError(err)
+    defer file.Close()
+
+    expectedImg, err := png.Decode(file)
+    s.Require().NoError(err)
+
+    s.Require().Equal(expectedImg, img)
+}
+
+func (s *PlainLatexToImgConverterTestSuite) convertImgFromFile(path string) image.Image {
+    content, err := os.ReadFile(path)
+    s.Require().NoError(err)
+
+    img, err := s.converter.Convert(context.Background(), content)
+    s.Require().NoError(err)
+    return img
 }
