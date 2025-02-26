@@ -53,3 +53,20 @@ func main() {
         fmt.Printf("Successfully converted %s to %s\n", path, outputFile)
     }
 }
+
+func createTmpIfNotExists() {
+    fmt.Printf("Create tmp directory")
+
+    err := os.Mkdir("./tmp", 0644)
+    if err == nil {
+        return
+    }
+    
+    if os.IsNotExist(err) {
+        fmt.Printf("tmp directory already exists")
+        return
+    }
+
+    fmt.Printf("Can't create tmp dir: %v", err)
+    os.Exit(1)
+}
