@@ -1,12 +1,12 @@
 package latex2img
 
 import (
-    "context"
-    "fmt"
-    "image"
-    "os"
-    "os/exec"
-    "path/filepath"
+	"context"
+	"fmt"
+	"image"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 type PlainLatexToImgConverter struct {
@@ -75,7 +75,7 @@ func compileLatex(
     latexCmd.Dir = tempDir
     output, err := latexCmd.CombinedOutput()
     if err != nil {
-        return fmt.Errorf("latex compilation error: %w, output: %s", err, output)
+        return fmt.Errorf("latex compilation error: %w", parseLatexError(output))
     }
 
     return nil
@@ -101,7 +101,7 @@ func dvi2img(
     dvipngCmd.Dir = tempDir
     output, err := dvipngCmd.CombinedOutput()
     if err != nil {
-        return nil, fmt.Errorf("error during dvipng running: %w, output: %s", err, output)
+        return nil, fmt.Errorf("error during dvipng running:\n %w\n, output:\n %s\n", err, output)
     }
 
     pngData, err := os.Open(pngFile)

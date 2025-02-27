@@ -7,7 +7,7 @@ func ImageDPI() string {
 func CorrectTestdataFiles() []string {
     return []string{
         "simple.tex",
-        "double_compilation_needed.tex",
+        "double_compilation.tex",
     }
 }
 

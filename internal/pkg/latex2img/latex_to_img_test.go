@@ -39,14 +39,72 @@ func (s *PlainLatexToImgConverterTestSuite) SetupSuite() {
 
 func (s *PlainLatexToImgConverterTestSuite) TestConvert_EqualToGeneratedPngs_WhenCorrectTexFiles() {
 	for _, file := range params.CorrectTestdataFiles() {
-        s.Run(s.pathToTestdata, func() {
-            path := filepath.Join(s.pathToTestdata, file)
+        path := filepath.Join(s.pathToTestdata, file)
 
-            img := s.convertImgFromFile(path)
+        s.Run(file, func() {
+            img := s.correctlyConvertImgFromFile(path)
 
             s.imgEqualToImgFromFile(img, strings.TrimSuffix(path, ".tex") + ".png") 
         })
 	}
+}
+
+func (s *PlainLatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCompilationError() {
+    tests := []struct {
+        file string
+        expectedError *LatexCompilationError
+    } {
+        {
+            "not_closed_math_brace_error.tex",
+            &LatexCompilationError{
+                Message: "Missing $ inserted.",
+                Line: 4,
+                Context: "<inserted text> \n                $\nl.4 \\end{document}",
+            },
+        },
+        {
+            "missing_package_error.tex",
+            &LatexCompilationError{
+                Message: "LaTeX Error: File `nonexistpackage.sty' not found.",
+                Line: 0,
+                Context: "",
+            },
+        },
+        {
+            "not_ended_document_error.tex",
+            &LatexCompilationError{
+                Message: "Emergency stop.",
+                Line: 0,
+                Context: "<*> document.tex",
+            },
+        },
+        {
+            "too_many_closed_brackets_error.tex",
+            &LatexCompilationError{
+                Message: "Extra }, or forgotten $.",
+                Line: 3,
+                Context: "l.3 VkTeX \\( \\frac{1}{b}}\n                          \\)",
+            },
+        },
+        {
+            "undefined_control_sequence.tex",
+            &LatexCompilationError{
+                Message: "Undefined control sequence.",
+                Line: 3,
+                Context: "l.3 \\dtae",
+            },
+        },
+    }
+
+    for _, test := range tests {
+        path := filepath.Join(s.pathToTestdata, test.file)
+
+        s.Run(test.file, func() {
+            err := s.convertImgFromFileReturnLatexCompilationError(path)
+
+            s.Require().Equal(err, test.expectedError)
+        })
+    }
 }
 
 // Helpers
@@ -62,11 +120,23 @@ func (s *PlainLatexToImgConverterTestSuite) imgEqualToImgFromFile(img image.Imag
     s.Require().Equal(expectedImg, img)
 }
 
-func (s *PlainLatexToImgConverterTestSuite) convertImgFromFile(path string) image.Image {
+func (s *PlainLatexToImgConverterTestSuite) correctlyConvertImgFromFile(path string) image.Image {
     content, err := os.ReadFile(path)
     s.Require().NoError(err)
 
     img, err := s.converter.Convert(context.Background(), content)
     s.Require().NoError(err)
     return img
+}
+
+
+func (s *PlainLatexToImgConverterTestSuite) convertImgFromFileReturnLatexCompilationError(path string) *LatexCompilationError {
+    content, err := os.ReadFile(path)
+    s.Require().NoError(err)
+    
+    var compilationError *LatexCompilationError
+    _, err = s.converter.Convert(context.Background(), content)
+    
+    s.Require().ErrorAs(err, &compilationError)
+    return compilationError
 }
