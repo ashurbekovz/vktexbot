@@ -33,7 +33,7 @@ func (s *PlainLatexToImgConverterTestSuite) SetupSuite() {
 	err = os.Mkdir("./tmp", 0644)
 	s.Require().NoError(err)
 
-	s.converter = NewPlainLatexToImgConverter(tempDir, params.ImageDPI())
+	s.converter = NewPlainLatexToImgConverter(tempDir, false, params.ImageDPI())
 	s.pathToTestdata = "testdata/"
 }
 

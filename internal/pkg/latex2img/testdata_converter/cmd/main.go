@@ -18,7 +18,7 @@ func main() {
     flag.Parse()
     
     createTmpIfNotExists()
-    converter := latex2img.NewPlainLatexToImgConverter("tmp", params.ImageDPI())
+    converter := latex2img.NewPlainLatexToImgConverter("tmp", false, params.ImageDPI())
     
     for _, file := range params.CorrectTestdataFiles() {
         path := filepath.Join(*pathToTestdata, file)
@@ -56,18 +56,18 @@ func main() {
 }
 
 func createTmpIfNotExists() {
-    fmt.Printf("Create tmp directory")
+    fmt.Printf("Create tmp directory\n")
 
     err := os.Mkdir("./tmp", 0644)
     if err == nil {
         return
     }
     
-    if os.IsNotExist(err) {
-        fmt.Printf("tmp directory already exists")
+    if os.IsExist(err) {
+        fmt.Printf("tmp directory already exists\n")
         return
     }
 
-    fmt.Printf("Can't create tmp dir: %v", err)
+    fmt.Printf("Can't create tmp dir: %v\n", err)
     os.Exit(1)
 }

@@ -1,24 +1,29 @@
 package latex2img
 
 import (
-	"context"
-	"fmt"
-	"image"
-	"os"
-	"os/exec"
-	"path/filepath"
+    "context"
+    "fmt"
+    "image"
+    "os"
+    "os/exec"
+    "path/filepath"
 )
 
 type PlainLatexToImgConverter struct {
     workDir string
+    clearWorkDir bool
+
     imageDPI string
 }
 
 func NewPlainLatexToImgConverter(
-    workDir, imageDPI string,
+    workDir string,
+    clearWorkDir bool,
+    imageDPI string,
 ) *PlainLatexToImgConverter {
     return &PlainLatexToImgConverter{
         workDir: workDir,
+        clearWorkDir: clearWorkDir,
         imageDPI: imageDPI,
     }
 }
@@ -28,7 +33,9 @@ func (c *PlainLatexToImgConverter) Convert(ctx context.Context, content []byte) 
     if err != nil {
         return nil, fmt.Errorf("cant create tempdir: %w", err)
     }
-    defer os.RemoveAll(tempDir)
+    if c.clearWorkDir {
+        defer os.RemoveAll(tempDir)
+    }
 
     const latexResFile = "result"
     err = compileLatex(ctx, tempDir, latexResFile, content)
@@ -58,11 +65,13 @@ func compileLatex(
 
     latexCmd := exec.CommandContext(
         ctx,
-        "latex",
-        "-interaction", "nonstopmode",
-        "-jobname", resFile,
+        // latexmk instead latex because it automatically determines the number of compilations require 
+        "latexmk", 
+        "-dvi",
+        "-interaction=nonstopmode",
+        "-jobname=" + resFile,
         "document.tex",
-    )
+        )
     latexCmd.Dir = tempDir
     output, err := latexCmd.CombinedOutput()
     if err != nil {
@@ -88,7 +97,7 @@ func dvi2img(
         "-bg", "Transparent",
         "-o", "output.png",
         inFile + ".dvi",
-    )
+        )
     dvipngCmd.Dir = tempDir
     output, err := dvipngCmd.CombinedOutput()
     if err != nil {
