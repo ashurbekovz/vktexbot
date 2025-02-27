@@ -25,9 +25,13 @@ remove_container:
 		echo "Container $(CONTAINER_NAME) does not exist."; \
 	fi
 
+update_app:
+	docker exec $(CONTAINER_NAME) bash -c "rm -rf /app/*"
+	docker cp $(ROOT_DIR)/. $(CONTAINER_NAME):/app/
+
 generate_testdata:
 	make run_container
-	docker cp $(ROOT_DIR)/. $(CONTAINER_NAME):/app/
+	make update_app
 	docker exec $(CONTAINER_NAME) bash -c \
 		"cd /app/internal/pkg/latex2img/testdata_converter/cmd/ && \
 		go run main.go -path ./../../testdata"
@@ -35,6 +39,6 @@ generate_testdata:
 
 test:
 	make run_container
-	docker cp $(ROOT_DIR)/ $(CONTAINER_NAME):/sources
-	docker exec $(CONTAINER_NAME) bash -c "cd sources && go test ./..."
+	make update_app
+	docker exec $(CONTAINER_NAME) bash -c "cd app && go test ./..."
 	
