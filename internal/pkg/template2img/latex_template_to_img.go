@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/ashurbekovz/vktexbot/internal/utils/resize"
+	"github.com/ashurbekovz/vktexbot/internal/tools/resize"
 	"github.com/shopspring/decimal"
 )
 

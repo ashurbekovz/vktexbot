@@ -2,7 +2,7 @@ package params
 
 import (
 	"github.com/ashurbekovz/vktexbot/internal/pkg/template2img"
-	"github.com/ashurbekovz/vktexbot/internal/utils/must"
+	"github.com/ashurbekovz/vktexbot/internal/tools/must"
 	"github.com/shopspring/decimal"
 )
 
