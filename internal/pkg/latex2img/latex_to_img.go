@@ -7,28 +7,33 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+    "github.com/shopspring/decimal"
 )
 
-type PlainLatexToImgConverter struct {
+type LatexToImgConverter struct {
     workDir string
     clearWorkDir bool
 
-    imageDPI string
+    imageDPI decimal.Decimal
 }
 
-func NewPlainLatexToImgConverter(
+func NewLatexToImgConverter(
     workDir string,
     clearWorkDir bool,
-    imageDPI string,
-) *PlainLatexToImgConverter {
-    return &PlainLatexToImgConverter{
+    imageDPI decimal.Decimal,
+) LatexToImgConverter {
+    return LatexToImgConverter{
         workDir: workDir,
         clearWorkDir: clearWorkDir,
         imageDPI: imageDPI,
     }
 }
 
-func (c *PlainLatexToImgConverter) Convert(ctx context.Context, content []byte) (image.Image, error) {
+func (c *LatexToImgConverter) GetDPI() decimal.Decimal {
+    return c.imageDPI
+}
+
+func (c *LatexToImgConverter) Convert(ctx context.Context, content []byte) (image.Image, error) {
     tempDir, err := os.MkdirTemp(c.workDir, "latex-")
     if err != nil {
         return nil, fmt.Errorf("cant create tempdir: %w", err)
@@ -86,13 +91,13 @@ func compileLatex(
 func dvi2img(
     ctx context.Context,
     tempDir, inFile string,
-    dpi string,
+    dpi decimal.Decimal,
 ) (image.Image, error) {
     pngFile := filepath.Join(tempDir, "output.png")
     dvipngCmd := exec.CommandContext(
         ctx,
         "dvipng",
-        "-D", dpi,
+        "-D", dpi.String(),
         "-T", "Tight",
         "-bg", "Transparent",
         "-o", "output.png",

@@ -7,36 +7,34 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/ashurbekovz/vktexbot/internal/pkg/latex2img"
-	"github.com/ashurbekovz/vktexbot/internal/pkg/latex2img/testdata_converter/params"
+	"github.com/ashurbekovz/vktexbot/internal/pkg/template2img"
+	"github.com/ashurbekovz/vktexbot/internal/pkg/template2img/testdata_converter/params"
 )
+
 
 func main() {
     pathToTestdata := flag.String("path", "testdata", "path to testdata")
     flag.Parse()
     
     createTmpIfNotExists()
-    converter := latex2img.NewLatexToImgConverter("tmp", false, params.ImageDPI())
+    baseConverter := latex2img.NewLatexToImgConverter("tmp", true, params.ImageDPI())
     
-    for _, file := range params.CorrectTestdataFiles() {
-        path := filepath.Join(*pathToTestdata, file)
-        fmt.Printf("Processing file: %s\n", path)
+    for _, testdata := range params.GetTesdataConvertationParams() {
+        fmt.Printf("Processing testdata: %s", testdata.Name)
 
-        content, err := os.ReadFile(path)
-        if err != nil {
-            fmt.Printf("Error reading file %s: %v\n", path, err)
-            os.Exit(1)
-        }
+        path := filepath.Join(*pathToTestdata, testdata.Name)
 
-        img, err := converter.Convert(context.Background(), content)
+        templateConverter := template2img.NewLatexTemplateToImgConverter(&baseConverter, testdata.Packages)
+
+        img, err := templateConverter.Convert(context.Background(), testdata.Text, testdata.Params)
         if err != nil {
             fmt.Printf("Error converting file %s: %v\n", path, err)
             os.Exit(1)
         }
 
-        outputFile := strings.TrimSuffix(path, ".tex") + ".png"
+        outputFile := path + ".png"
 
         out, err := os.Create(outputFile)
         if err != nil {

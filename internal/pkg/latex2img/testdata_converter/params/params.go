@@ -1,7 +1,9 @@
 package params
 
-func ImageDPI() string {
-    return "400"
+import "github.com/shopspring/decimal"
+
+func ImageDPI() decimal.Decimal {
+    return decimal.NewFromInt(400)
 }
 
 func CorrectTestdataFiles() []string {

@@ -1,4 +1,4 @@
-package latex2img
+package latex2img_test
 
 import (
 	"context"
@@ -10,21 +10,22 @@ import (
 	"testing"
 
 	"github.com/ashurbekovz/vktexbot/internal/pkg/latex2img/testdata_converter/params"
+	"github.com/ashurbekovz/vktexbot/internal/pkg/latex2img"
 	"github.com/stretchr/testify/suite"
 )
 
-type PlainLatexToImgConverterTestSuite struct {
+type LatexToImgConverterTestSuite struct {
 	suite.Suite
 
 	pathToTestdata string
-	converter      *PlainLatexToImgConverter
+	converter      latex2img.LatexToImgConverter
 }
 
-func TestPlainLatexToImgConverterSuiteTestSuite(t *testing.T) {
-	suite.Run(t, new(PlainLatexToImgConverterTestSuite))
+func TestLatexToImgConverterSuiteTestSuite(t *testing.T) {
+	suite.Run(t, new(LatexToImgConverterTestSuite))
 }
 
-func (s *PlainLatexToImgConverterTestSuite) SetupSuite() {
+func (s *LatexToImgConverterTestSuite) SetupSuite() {
 	tempDir := "tmp"
 
 	err := os.RemoveAll(tempDir)
@@ -33,11 +34,11 @@ func (s *PlainLatexToImgConverterTestSuite) SetupSuite() {
 	err = os.Mkdir("./tmp", 0644)
 	s.Require().NoError(err)
 
-	s.converter = NewPlainLatexToImgConverter(tempDir, false, params.ImageDPI())
+	s.converter = latex2img.NewLatexToImgConverter(tempDir, false, params.ImageDPI())
 	s.pathToTestdata = "testdata/"
 }
 
-func (s *PlainLatexToImgConverterTestSuite) TestConvert_EqualToGeneratedPngs_WhenCorrectTexFiles() {
+func (s *LatexToImgConverterTestSuite) TestConvert_EqualToGeneratedPngs_WhenCorrectTexFiles() {
 	for _, file := range params.CorrectTestdataFiles() {
         path := filepath.Join(s.pathToTestdata, file)
 
@@ -49,14 +50,14 @@ func (s *PlainLatexToImgConverterTestSuite) TestConvert_EqualToGeneratedPngs_Whe
 	}
 }
 
-func (s *PlainLatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCompilationError() {
+func (s *LatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCompilationError() {
     tests := []struct {
         file string
-        expectedError *LatexCompilationError
+        expectedError *latex2img.LatexCompilationError
     } {
         {
             "not_closed_math_brace_error.tex",
-            &LatexCompilationError{
+            &latex2img.LatexCompilationError{
                 Message: "Missing $ inserted.",
                 Line: 4,
                 Context: "<inserted text> \n                $\nl.4 \\end{document}",
@@ -64,7 +65,7 @@ func (s *PlainLatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCom
         },
         {
             "missing_package_error.tex",
-            &LatexCompilationError{
+            &latex2img.LatexCompilationError{
                 Message: "LaTeX Error: File `nonexistpackage.sty' not found.",
                 Line: 0,
                 Context: "",
@@ -72,7 +73,7 @@ func (s *PlainLatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCom
         },
         {
             "not_ended_document_error.tex",
-            &LatexCompilationError{
+            &latex2img.LatexCompilationError{
                 Message: "Emergency stop.",
                 Line: 0,
                 Context: "<*> document.tex",
@@ -80,7 +81,7 @@ func (s *PlainLatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCom
         },
         {
             "too_many_closed_brackets_error.tex",
-            &LatexCompilationError{
+            &latex2img.LatexCompilationError{
                 Message: "Extra }, or forgotten $.",
                 Line: 3,
                 Context: "l.3 VkTeX \\( \\frac{1}{b}}\n                          \\)",
@@ -88,7 +89,7 @@ func (s *PlainLatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCom
         },
         {
             "undefined_control_sequence.tex",
-            &LatexCompilationError{
+            &latex2img.LatexCompilationError{
                 Message: "Undefined control sequence.",
                 Line: 3,
                 Context: "l.3 \\dtae",
@@ -109,7 +110,7 @@ func (s *PlainLatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCom
 
 // Helpers
 
-func (s *PlainLatexToImgConverterTestSuite) imgEqualToImgFromFile(img image.Image, expectedImgPath string) {
+func (s *LatexToImgConverterTestSuite) imgEqualToImgFromFile(img image.Image, expectedImgPath string) {
     file, err := os.Open(expectedImgPath)
     s.Require().NoError(err)
     defer file.Close()
@@ -120,7 +121,7 @@ func (s *PlainLatexToImgConverterTestSuite) imgEqualToImgFromFile(img image.Imag
     s.Require().Equal(expectedImg, img)
 }
 
-func (s *PlainLatexToImgConverterTestSuite) correctlyConvertImgFromFile(path string) image.Image {
+func (s *LatexToImgConverterTestSuite) correctlyConvertImgFromFile(path string) image.Image {
     content, err := os.ReadFile(path)
     s.Require().NoError(err)
 
@@ -130,11 +131,11 @@ func (s *PlainLatexToImgConverterTestSuite) correctlyConvertImgFromFile(path str
 }
 
 
-func (s *PlainLatexToImgConverterTestSuite) convertImgFromFileReturnLatexCompilationError(path string) *LatexCompilationError {
+func (s *LatexToImgConverterTestSuite) convertImgFromFileReturnLatexCompilationError(path string) *latex2img.LatexCompilationError {
     content, err := os.ReadFile(path)
     s.Require().NoError(err)
     
-    var compilationError *LatexCompilationError
+    var compilationError *latex2img.LatexCompilationError
     _, err = s.converter.Convert(context.Background(), content)
     
     s.Require().ErrorAs(err, &compilationError)

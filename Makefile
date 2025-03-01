@@ -17,10 +17,10 @@ run_container:
 remove_container:
 	@if docker ps -a --format '{{.Names}}' | grep -q "^$(CONTAINER_NAME)$$"; then \
 		if docker ps --format '{{.Names}}' | grep -q "^$(CONTAINER_NAME)$$"; then \
-			docker stop $(CONTAINER_NAME); \
+			docker kill $(CONTAINER_NAME); \
 		fi; \
 		docker rm $(CONTAINER_NAME); \
-		echo "Container $(CONTAINER_NAME) stopped and removed."; \
+		echo "Container $(CONTAINER_NAME) killed and removed."; \
 	else \
 		echo "Container $(CONTAINER_NAME) does not exist."; \
 	fi
@@ -32,10 +32,16 @@ update_app:
 generate_testdata:
 	make run_container
 	make update_app
+	\
 	docker exec $(CONTAINER_NAME) bash -c \
 		"cd /app/internal/pkg/latex2img/testdata_converter/cmd/ && \
 		go run main.go -path ./../../testdata"
 	docker cp $(CONTAINER_NAME):/app/internal/pkg/latex2img/testdata $(ROOT_DIR)/internal/pkg/latex2img/
+	\
+	docker exec $(CONTAINER_NAME) bash -c \
+		"cd /app/internal/pkg/template2img/testdata_converter/cmd/ && \
+		go run main.go -path ./../../testdata"
+	docker cp $(CONTAINER_NAME):/app/internal/pkg/template2img/testdata $(ROOT_DIR)/internal/pkg/template2img/
 
 test:
 	make run_container
