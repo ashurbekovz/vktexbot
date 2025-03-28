@@ -1,0 +1,9 @@
+vk_group_id: "public194766396"
+packages: |
+  \usepackage{amsmath,amsthm,amssymb,amsfonts,mathtools,mathtext,physics,tikz,bigints}
+  \usepackage[T1,T2A]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage[english,russian]{babel}
+  \usepackage{listings}
+  \usepackage{xcolor}
+
