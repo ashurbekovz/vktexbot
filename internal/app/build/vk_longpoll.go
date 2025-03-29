@@ -13,6 +13,7 @@ import (
 	"github.com/SevereCloud/vksdk/v3/api"
 	"github.com/SevereCloud/vksdk/v3/events"
 	"github.com/SevereCloud/vksdk/v3/longpoll-bot"
+	"github.com/ashurbekovz/vktexbot/internal/app/parsers"
 	"github.com/ashurbekovz/vktexbot/internal/app/usecases"
 	"github.com/ashurbekovz/vktexbot/internal/pkg/latex2img"
 	"github.com/ashurbekovz/vktexbot/internal/pkg/template2img"
@@ -74,7 +75,8 @@ func (a *VkApp) Run() {
 	must.Do(os.Mkdir("./tmp", 0644))
 	l2i := latex2img.NewLatexToImgConverter("./tmp/", false, decimal.NewFromInt(400))
 	t2i := template2img.NewLatexTemplateToImgConverter(&l2i, config.Packages)
-	vkUC := usecases.NewVkUsecase(vk, &t2i)
+	parser := parsers.NewVk()
+	vkUC := usecases.NewVkUsecase(vk, &t2i, parser)
 
 	lp.MessageNew(func(ctx context.Context, obj events.MessageNewObject) {
 		opt := usecases.VkOpt{

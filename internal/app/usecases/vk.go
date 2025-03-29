@@ -9,6 +9,7 @@ import (
 
 	"github.com/SevereCloud/vksdk/v3/api"
 	"github.com/SevereCloud/vksdk/v3/api/params"
+	"github.com/ashurbekovz/vktexbot/internal/app/parsers"
 	"github.com/ashurbekovz/vktexbot/internal/pkg/template2img"
 )
 
@@ -21,17 +22,20 @@ type VkRes struct {
 }
 
 type VkUsecase struct {
-	vk  *api.VK
-	t2i *template2img.LatexTemplateToImgConverter
+	vk     *api.VK
+	t2i    *template2img.LatexTemplateToImgConverter
+	parser *parsers.Vk
 }
 
 func NewVkUsecase(
 	vk *api.VK,
 	t2i *template2img.LatexTemplateToImgConverter,
+	parser *parsers.Vk,
 ) *VkUsecase {
 	return &VkUsecase{
-		vk:  vk,
-		t2i: t2i,
+		vk:     vk,
+		t2i:    t2i,
+		parser: parser,
 	}
 }
 
@@ -41,12 +45,16 @@ func (u *VkUsecase) Execute(
 ) (VkRes, error) {
 	log.Printf("Received message from peer %d with text: '%s'", opt.PeerID, opt.Message)
 
-	imgParams, err := template2img.NewImageParams()
+	messageParams, err := u.parser.Parse(opt.Message)
 	if err != nil {
-		return VkRes{}, fmt.Errorf("Failed to create image parameters: %w", err)
+		return VkRes{}, fmt.Errorf("Failed to parse message: %w", err)
 	}
 
-	img, err := u.t2i.Convert(ctx, opt.Message, imgParams)
+	if len(messageParams.Message) == 0 {
+		return VkRes{}, fmt.Errorf("Message is empty")
+	}
+
+	img, err := u.t2i.Convert(ctx, messageParams.Message, messageParams.ImageParams)
 	if err != nil {
 		return VkRes{}, fmt.Errorf("Failed to convert message to image: %w", err)
 	}

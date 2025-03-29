@@ -20,41 +20,47 @@ type ImageParams struct {
 	additionalImageWidthPt       decimal.Decimal
 }
 
-type opt func(*ImageParams)
+type Opt func(*ImageParams)
 
-func Crop() opt {
+func Crop() Opt {
 	return func(imageParams *ImageParams) {
 		imageParams.crop = true
 	}
 }
 
-func FontSize(fontSizePt decimal.Decimal) opt {
+func TextWidth(textWidthPt decimal.Decimal) Opt {
+	return func(imageParams *ImageParams) {
+		imageParams.textWidthPt = textWidthPt
+	}
+}
+
+func FontSize(fontSizePt decimal.Decimal) Opt {
 	return func(imageParams *ImageParams) {
 		imageParams.fontSizePt = fontSizePt
 	}
 }
 
-func MinImageSize(heightPt, widthPt decimal.Decimal) opt {
+func MinImageSize(heightPt, widthPt decimal.Decimal) Opt {
 	return func(imageParams *ImageParams) {
 		imageParams.minImageHeightPt = heightPt
 		imageParams.minImageWidthPt = widthPt
 	}
 }
 
-func MinImageWidthToFontSizeRatio(ratio decimal.Decimal) opt {
+func MinImageWidthToFontSizeRatio(ratio decimal.Decimal) Opt {
 	return func(imageParams *ImageParams) {
 		imageParams.minImageWidthToFontSizeRatio = ratio
 	}
 }
 
-func AdditionalBorders(heightPt, widthPt decimal.Decimal) opt {
+func AdditionalBorders(heightPt, widthPt decimal.Decimal) Opt {
 	return func(imageParams *ImageParams) {
 		imageParams.additionalImageHeightPt = heightPt
 		imageParams.additionalImageWidthPt = widthPt
 	}
 }
 
-func NewImageParams(opts ...opt) (ImageParams, error) {
+func NewImageParams(opts ...Opt) (ImageParams, error) {
 	imageParams := ImageParams{
 		crop:                         false,
 		fontSizePt:                   decimal.RequireFromString("10"),
