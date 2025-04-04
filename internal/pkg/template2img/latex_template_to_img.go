@@ -141,7 +141,7 @@ func processImage(
 ) (image.Image, error) {
 	img, err := resize.CropToBoundingBox(img)
 	if err != nil {
-		return nil, fmt.Errorf("error while ctop img: %w", err)
+		return nil, fmt.Errorf("error while crop img: %w", err)
 	}
 
 	finalHeightPt := resize.PixelToPt(int64(img.Bounds().Dy()), dpi)

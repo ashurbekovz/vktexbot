@@ -11,7 +11,7 @@ run_container:
 	@if docker ps -a --format '{{.Names}}' | grep -q "^$(CONTAINER_NAME)$$"; then \
         echo "Container $(CONTAINER_NAME) is already exists."; \
     else \
-        docker run -d --name $(CONTAINER_NAME) vktex_proj tail -f /dev/null; \
+        docker run -d --name $(CONTAINER_NAME) --cap-add=SYS_ADMIN vktex_proj tail -f /dev/null; \
     fi
 
 remove_container:

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -45,7 +46,7 @@ func (c *LatexToImgConverter) Convert(ctx context.Context, content []byte) (imag
 	}
 
 	const latexResFile = "result"
-	err = compileLatex(ctx, tempDir, latexResFile, content)
+	err = CompileLatex(ctx, tempDir, latexResFile, content)
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +59,9 @@ func (c *LatexToImgConverter) Convert(ctx context.Context, content []byte) (imag
 	return image, nil
 }
 
-// compileLatex compile latex file with context to `tempDir`/`resFile`.dvi file.
+// CompileLatex compile latex file with context to `tempDir`/`resFile`.dvi file.
 // Some spin-off files can some side files may be created in tempDir.
-func compileLatex(
+func CompileLatex(
 	ctx context.Context,
 	tempDir, resFile string,
 	content []byte,
@@ -70,10 +71,24 @@ func compileLatex(
 		return fmt.Errorf("cant write .tex file: %w", err)
 	}
 
+	tempDirFull, err := filepath.Abs(tempDir)
+	if err != nil {
+		return fmt.Errorf("can't get absolute path for tempDir: %w", err)
+	}
+
 	latexCmd := exec.CommandContext(
 		ctx,
-		// latexmk instead latex because it automatically determines the number of compilations require
-		"latexmk",
+		"bwrap",
+		"--proc", "/proc",
+		"--dev", "/dev",
+		"--tmpfs", "/tmp",
+		"--ro-bind", "/usr", "/usr",
+		"--ro-bind", "/lib", "/lib",
+		"--ro-bind", "/bin", "/bin",
+		"--ro-bind", "/etc", "/etc",
+		"--ro-bind", "/var/lib/texmf", "/var/lib/texmf",
+		"--bind", tempDirFull, tempDirFull,
+		"/usr/bin/latexmk",
 		"-dvi",
 		"-interaction=nonstopmode",
 		"-jobname="+resFile,
@@ -82,6 +97,8 @@ func compileLatex(
 	latexCmd.Dir = tempDir
 	output, err := latexCmd.CombinedOutput()
 	if err != nil {
+		log.Println(latexCmd.Args)
+		log.Println(string(output))
 		return fmt.Errorf("latex compilation error: %w", parseLatexError(output))
 	}
 
