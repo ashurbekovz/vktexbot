@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/ashurbekovz/vktexbot/compare/v0.2.0...v0.2.1) (2025-04-04)
+
+
+### Bug Fixes
+
+* isolate latex compilation process ([349ab45](https://github.com/ashurbekovz/vktexbot/commit/349ab45466762c90aa998d344906e226e2e2a559))
+
 ## [0.2.0](https://github.com/ashurbekovz/vktexbot/compare/v0.1.0...v0.2.0) (2025-03-29)
 
 
