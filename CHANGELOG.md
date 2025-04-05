@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/ashurbekovz/vktexbot/compare/v0.2.1...v0.2.2) (2025-04-05)
+
+
+### Bug Fixes
+
+* set resource limits and remove bwrap ([a922c69](https://github.com/ashurbekovz/vktexbot/commit/a922c69c198dedb6661b7d934bf6c6f4b7aaeff7))
+
 ## [0.2.1](https://github.com/ashurbekovz/vktexbot/compare/v0.2.0...v0.2.1) (2025-04-04)
 
 
