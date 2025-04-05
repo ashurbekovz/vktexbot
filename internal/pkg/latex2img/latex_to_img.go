@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -71,23 +70,10 @@ func CompileLatex(
 		return fmt.Errorf("cant write .tex file: %w", err)
 	}
 
-	tempDirFull, err := filepath.Abs(tempDir)
-	if err != nil {
-		return fmt.Errorf("can't get absolute path for tempDir: %w", err)
-	}
-
 	latexCmd := exec.CommandContext(
 		ctx,
-		"bwrap",
-		"--proc", "/proc",
-		"--dev", "/dev",
-		"--tmpfs", "/tmp",
-		"--ro-bind", "/usr", "/usr",
-		"--ro-bind", "/lib", "/lib",
-		"--ro-bind", "/bin", "/bin",
-		"--ro-bind", "/etc", "/etc",
-		"--ro-bind", "/var/lib/texmf", "/var/lib/texmf",
-		"--bind", tempDirFull, tempDirFull,
+		"timeout", "3s",
+		"prlimit", "--as=500000000",
 		"/usr/bin/latexmk",
 		"-dvi",
 		"-interaction=nonstopmode",
@@ -97,8 +83,6 @@ func CompileLatex(
 	latexCmd.Dir = tempDir
 	output, err := latexCmd.CombinedOutput()
 	if err != nil {
-		log.Println(latexCmd.Args)
-		log.Println(string(output))
 		return fmt.Errorf("latex compilation error: %w", parseLatexError(output))
 	}
 
@@ -114,6 +98,8 @@ func dvi2img(
 ) (image.Image, error) {
 	dvipngCmd := exec.CommandContext(
 		ctx,
+		"timeout", "2s",
+		"prlimit", "--as=500000000",
 		"dvipng",
 		"-D", dpi.String(),
 		"-T", "Tight",

@@ -172,22 +172,18 @@ func (s *CompileLatex) TearDownTest() {
 	s.Require().NoError(err)
 }
 
-func (s *CompileLatex) Test_ReturnOK_WhenDirectoryWithoutAccess() {
-	restrictedFile := filepath.Join(s.tempDir, "..", "restricted_file.txt")
-	err := os.WriteFile(restrictedFile, []byte("test\n"), 0644)
-	s.Require().NoError(err)
-	latexContent := []byte("\\documentclass{article}\n" +
-		"\\usepackage{amsmath,amsthm,amssymb,amsfonts,mathtools,mathtext,physics,tikz,bigints}\n" +
-		"\\usepackage[T1,T2A]{fontenc}\n" +
-		"\\usepackage[utf8]{inputenc}\n" +
-		"\\usepackage[english,russian]{babel}\n" +
-		"\\usepackage{listings}\n" +
-		"\\usepackage{xcolor}\n" +
-		"\\begin{document}\n" +
-		"lol\n" +
-		"\\end{document}")
-
-	err = latex2img.CompileLatex(context.Background(), s.tempDir, "test", latexContent)
+func (s *CompileLatex) Test_WithoutError_WhenSomeFileWithComplexPackages() {
+	latexContent := []byte(`\documentclass{article}
+\usepackage{amsmath,amsthm,amssymb,amsfonts,mathtools,mathtext,physics,tikz,bigints}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{listings}
+\usepackage{xcolor}
+\begin{document}
+text
+\end{document}`)
+	err := latex2img.CompileLatex(context.Background(), s.tempDir, "test", latexContent)
 
 	s.Require().NoError(err)
 }
@@ -196,13 +192,29 @@ func (s *CompileLatex) Test_ReturnError_WhenDirectoryWithoutAccess() {
 	restrictedFile := filepath.Join(s.tempDir, "..", "restricted_file.txt")
 	err := os.WriteFile(restrictedFile, []byte("test\n"), 0644)
 	s.Require().NoError(err)
-	latexContent := []byte("\\documentclass{article}\n" +
-		"\\begin{document}\n" +
-		"\\input{" + restrictedFile + "}\n" +
-		"\\end{document}")
-
+	latexContent := []byte(`\documentclass{article}
+\begin{document}
+\input{` + restrictedFile + `}
+\end{document}\`)
 	err = latex2img.CompileLatex(context.Background(), s.tempDir, "test", latexContent)
 
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "File `/tmp/restricted_file.txt' not found.")
+}
+
+func (s *CompileLatex) Test_Timeout() {
+	latexContent := []byte(`
+\documentclass{article}
+\begin{document}
+\newcount\loopiter
+\loopiter=0
+
+\loop
+    \advance\loopiter by 1
+    \typeout{Loop iteration: \the\loopiter}
+    \iftrue \repeat % Forces infinite loop (use with caution!)
+\end{document}`)
+
+	err := latex2img.CompileLatex(context.Background(), s.tempDir, "test", latexContent)
+	s.Require().Error(err)
 }
