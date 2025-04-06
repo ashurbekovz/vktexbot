@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/ashurbekovz/vktexbot/compare/v0.2.2...v0.3.0) (2025-04-06)
+
+
+### Features
+
+* add clear error messages ([1da681a](https://github.com/ashurbekovz/vktexbot/commit/1da681a293f2656048dcdb8d1812a1852e0f03ec))
+
 ## [0.2.2](https://github.com/ashurbekovz/vktexbot/compare/v0.2.1...v0.2.2) (2025-04-05)
 
 
