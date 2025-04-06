@@ -49,7 +49,7 @@ func (e *SyntaxError) UserError() string {
 	var builder strings.Builder
 
 	builder.WriteString("Компиляция LaTeX завершилась с ошибкой.\n")
-	builder.WriteString(fmt.Sprintf("Сообщение: %s", e.Message))
+	builder.WriteString(fmt.Sprintf("Текст ошибки: %s", e.Message))
 
 	if e.KnownLine() {
 		builder.WriteString(fmt.Sprintf("\nСтрока: %d", e.Line-13))

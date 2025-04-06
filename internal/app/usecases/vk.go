@@ -17,8 +17,9 @@ import (
 )
 
 type VkOpt struct {
-	PeerID  int
-	Message string
+	PeerID    int
+	Message   string
+	MessageID int
 }
 
 type VkRes struct {
@@ -43,24 +44,29 @@ func NewVkUsecase(
 }
 
 const (
-	UnknownErrMessage = "Произошла неизвестная ошибка. Разработчики уже выясняют причину."
-	EmptyErrMessage   = "Изображение пустое. Если это ошибка — сообщите разработчику."
+	UnknownErrMessage = "Произошла неизвестная ошибка. Мы уже выясняем причину."
+	EmptyErrMessage   = "Сгенерированное изображение оказалось пустым. Если это ошибка, пожалуйста, сообщите об этом разработчику."
 )
 
 func (u *VkUsecase) Execute(
 	ctx context.Context,
 	opt VkOpt,
 ) (VkRes, error) {
-	log.Printf("Received message from peer %d with text: '%s'", opt.PeerID, opt.Message)
+	log.Printf(
+		"Received message %d from peer %d with text: '%s'",
+		opt.MessageID,
+		opt.PeerID,
+		opt.Message,
+	)
 
 	messageParams, err := u.parser.Parse(opt.Message)
 	if err != nil {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
+		u.sendErrToPeer(opt.PeerID, opt.MessageID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to parse message: %w", err)
 	}
 
 	if len(messageParams.Message) == 0 {
-		u.sendErrToPeer(opt.PeerID, EmptyErrMessage)
+		u.sendErrToPeer(opt.PeerID, opt.MessageID, EmptyErrMessage)
 		return VkRes{}, fmt.Errorf("Message is empty")
 	}
 
@@ -70,11 +76,11 @@ func (u *VkUsecase) Execute(
 		var fullyTransparentError *resize.ImageFullyTransparentError
 		switch {
 		case errors.As(err, &syntaxError):
-			u.sendErrToPeer(opt.PeerID, syntaxError.UserError())
+			u.sendErrToPeer(opt.PeerID, opt.MessageID, syntaxError.UserError())
 		case errors.As(err, &fullyTransparentError):
-			u.sendErrToPeer(opt.PeerID, EmptyErrMessage)
+			u.sendErrToPeer(opt.PeerID, opt.MessageID, EmptyErrMessage)
 		default:
-			u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
+			u.sendErrToPeer(opt.PeerID, opt.MessageID, UnknownErrMessage)
 		}
 		return VkRes{}, fmt.Errorf("Failed to convert message to image: %w", err)
 	}
@@ -82,28 +88,29 @@ func (u *VkUsecase) Execute(
 	var buf bytes.Buffer
 	err = png.Encode(&buf, img)
 	if err != nil {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
+		u.sendErrToPeer(opt.PeerID, opt.MessageID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to encode image: %v", err)
 	}
 
 	resp, err := u.vk.UploadMessagesPhoto(opt.PeerID, &buf)
 	if err != nil {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
+		u.sendErrToPeer(opt.PeerID, opt.MessageID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to upload image: %w", err)
 	}
 	if len(resp) != 1 {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
+		u.sendErrToPeer(opt.PeerID, opt.MessageID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Invalid response length from UploadMessagesPhoto: %d", len(resp))
 	}
 
 	b := params.NewMessagesSendBuilder()
 	b.RandomID(0)
 	b.PeerID(opt.PeerID)
+	b.ForwardMessages([]int{opt.MessageID})
 	b.Attachment(resp[0].ToAttachment())
 
 	_, err = u.vk.MessagesSend(b.Params)
 	if err != nil {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
+		u.sendErrToPeer(opt.PeerID, opt.MessageID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to send message: %w", err)
 	}
 
@@ -111,12 +118,13 @@ func (u *VkUsecase) Execute(
 	return VkRes{}, nil
 }
 
-func (u *VkUsecase) sendErrToPeer(peerID int, errMessage string) error {
+func (u *VkUsecase) sendErrToPeer(peerID, replyTo int, errMessage string) error {
 	log.Printf("Attempting to report a peer '%d' error with the message '%s'", peerID, errMessage)
 
 	b := params.NewMessagesSendBuilder()
 	b.RandomID(0)
 	b.PeerID(peerID)
+	b.ReplyTo(replyTo)
 	b.Message(errMessage)
 
 	_, err := u.vk.MessagesSend(b.Params)
