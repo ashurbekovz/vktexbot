@@ -86,7 +86,20 @@ func (a *VkApp) Run() {
 
 		_, err := vkUC.Execute(ctx, opt)
 		if err != nil {
-			log.Printf("Error executing use case: %v", err)
+			log.Printf("Error during handling MessageNew event: %v", err)
+			return
+		}
+	})
+
+	lp.MessageEdit(func(ctx context.Context, obj events.MessageEditObject) {
+		opt := usecases.VkOpt{
+			Message: obj.Text,
+			PeerID:  obj.PeerID,
+		}
+
+		_, err := vkUC.Execute(ctx, opt)
+		if err != nil {
+			log.Printf("Error during handling MessageEdit event: %v", err)
 			return
 		}
 	})
