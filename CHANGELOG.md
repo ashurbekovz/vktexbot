@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/ashurbekovz/vktexbot/compare/v0.3.0...v0.4.0) (2025-04-06)
+
+
+### Features
+
+* add reaction to message edit ([7fd52d0](https://github.com/ashurbekovz/vktexbot/commit/7fd52d036f1e6aebf850761e21bdd07a3cadbe71))
+
+
+### Bug Fixes
+
+* bot only responds to its mentions ([cf49cd7](https://github.com/ashurbekovz/vktexbot/commit/cf49cd72b14c116f6a8dfa6780463046e780d66b))
+
 ## [0.3.0](https://github.com/ashurbekovz/vktexbot/compare/v0.2.2...v0.3.0) (2025-04-06)
 
 
