@@ -2,7 +2,6 @@ package parsers
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/ashurbekovz/vktexbot/internal/pkg/template2img"
@@ -10,10 +9,18 @@ import (
 )
 
 type Vk struct {
+	groupId   int
+	groupName string
 }
 
-func NewVk() *Vk {
-	return &Vk{}
+func NewVk(
+	groupId int,
+	groupName string,
+) *Vk {
+	return &Vk{
+		groupId:   groupId,
+		groupName: groupName,
+	}
 }
 
 type ParseRes struct {
@@ -22,15 +29,13 @@ type ParseRes struct {
 	Mention     bool
 }
 
-var looksLikeMention *regexp.Regexp = regexp.MustCompile(`^\[.*\|@.*\]$`)
-
 func (e *Vk) Parse(rawMessage string) (ParseRes, error) {
 	// TODO(ashurbekovz): all constants should be taken from receiver
 	// TODO(ashurbekovz): separate to parser + imageParams converter
 	parseRes := ParseRes{}
 	chunks := strings.Split(rawMessage, " ")
 
-	if len(chunks) > 0 && looksLikeMention.MatchString(chunks[0]) {
+	if len(chunks) > 0 && chunks[0] == fmt.Sprintf("[club%d|@%s]", e.groupId, e.groupName) {
 		parseRes.Mention = true
 		chunks = chunks[1:]
 	}

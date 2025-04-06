@@ -75,12 +75,8 @@ func (a *VkApp) Run() {
 	must.Do(os.Mkdir("./tmp", 0644))
 	l2i := latex2img.NewLatexToImgConverter("./tmp/", false, decimal.NewFromInt(400))
 	t2i := template2img.NewLatexTemplateToImgConverter(&l2i, config.Packages)
-	parser := parsers.NewVk()
-	vkUC := usecases.NewVkUsecase(
-		vk,
-		&t2i,
-		parser,
-	)
+	parser := parsers.NewVk(group.Groups[0].ID, group.Groups[0].ScreenName)
+	vkUC := usecases.NewVkUsecase(vk, &t2i, parser)
 
 	lp.MessageNew(func(ctx context.Context, obj events.MessageNewObject) {
 		opt := usecases.VkOpt{
