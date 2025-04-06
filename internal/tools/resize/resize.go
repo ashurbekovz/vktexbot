@@ -1,7 +1,6 @@
 package resize
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -15,6 +14,13 @@ func createNewImage(src image.Image, rect image.Rectangle) image.Image {
 	draw.Draw(newImg, newImg.Bounds(), src, rect.Min, draw.Src)
 
 	return newImg
+}
+
+type ImageFullyTransparentError struct {
+}
+
+func (e *ImageFullyTransparentError) Error() string {
+	return "image fully transparent"
 }
 
 func CropToBoundingBox(img image.Image) (image.Image, error) {
@@ -43,7 +49,7 @@ func CropToBoundingBox(img image.Image) (image.Image, error) {
 	}
 
 	if (minX > maxX) || (minY > maxY) {
-		return image.Rectangle{}, fmt.Errorf("image fully transparent")
+		return image.Rectangle{}, &ImageFullyTransparentError{}
 	}
 
 	return createNewImage(img, image.Rect(minX, minY, maxX+1, maxY+1)), nil

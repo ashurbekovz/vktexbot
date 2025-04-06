@@ -53,11 +53,11 @@ func (s *LatexToImgConverterTestSuite) TestConvert_EqualToGeneratedPngs_WhenCorr
 func (s *LatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCompilationError() {
 	tests := []struct {
 		file          string
-		expectedError *latex2img.LatexCompilationError
+		expectedError *latex2img.SyntaxError
 	}{
 		{
 			"not_closed_math_brace_error.tex",
-			&latex2img.LatexCompilationError{
+			&latex2img.SyntaxError{
 				Message: "Missing $ inserted.",
 				Line:    4,
 				Context: "<inserted text> \n                $\nl.4 \\end{document}",
@@ -65,7 +65,7 @@ func (s *LatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCompilat
 		},
 		{
 			"missing_package_error.tex",
-			&latex2img.LatexCompilationError{
+			&latex2img.SyntaxError{
 				Message: "LaTeX Error: File `nonexistpackage.sty' not found.",
 				Line:    0,
 				Context: "",
@@ -73,7 +73,7 @@ func (s *LatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCompilat
 		},
 		{
 			"not_ended_document_error.tex",
-			&latex2img.LatexCompilationError{
+			&latex2img.SyntaxError{
 				Message: "Emergency stop.",
 				Line:    0,
 				Context: "<*> document.tex",
@@ -81,7 +81,7 @@ func (s *LatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCompilat
 		},
 		{
 			"too_many_closed_brackets_error.tex",
-			&latex2img.LatexCompilationError{
+			&latex2img.SyntaxError{
 				Message: "Extra }, or forgotten $.",
 				Line:    3,
 				Context: "l.3 VkTeX \\( \\frac{1}{b}}\n                          \\)",
@@ -89,7 +89,7 @@ func (s *LatexToImgConverterTestSuite) TestConvert_ReturnError_WhenLatexCompilat
 		},
 		{
 			"undefined_control_sequence.tex",
-			&latex2img.LatexCompilationError{
+			&latex2img.SyntaxError{
 				Message: "Undefined control sequence.",
 				Line:    3,
 				Context: "l.3 \\dtae",
@@ -130,11 +130,11 @@ func (s *LatexToImgConverterTestSuite) correctlyConvertImgFromFile(path string) 
 	return img
 }
 
-func (s *LatexToImgConverterTestSuite) convertImgFromFileReturnLatexCompilationError(path string) *latex2img.LatexCompilationError {
+func (s *LatexToImgConverterTestSuite) convertImgFromFileReturnLatexCompilationError(path string) *latex2img.SyntaxError {
 	content, err := os.ReadFile(path)
 	s.Require().NoError(err)
 
-	var compilationError *latex2img.LatexCompilationError
+	var compilationError *latex2img.SyntaxError
 	_, err = s.converter.Convert(context.Background(), content)
 
 	s.Require().ErrorAs(err, &compilationError)

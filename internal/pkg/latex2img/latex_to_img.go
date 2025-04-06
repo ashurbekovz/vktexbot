@@ -78,6 +78,7 @@ func CompileLatex(
 		"-dvi",
 		"-interaction=nonstopmode",
 		"-jobname="+resFile,
+		"-verbose",
 		"document.tex",
 	)
 	latexCmd.Dir = tempDir

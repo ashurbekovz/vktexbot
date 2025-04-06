@@ -64,17 +64,16 @@ loop:
 	if !hasCrop {
 		opts = append(opts, template2img.MinImageSize(fontSizePt, fontSizePt))
 		opts = append(opts, template2img.MinImageWidthToFontSizeRatio(decimal.NewFromInt(22)))
-	}
+		opts = append(opts, template2img.MinImageHeightToFontSizeRatio(decimal.NewFromInt(7)))
 
-	if hasWa || hasHa {
-		wa := decimal.Zero
+		wa := decimal.NewFromInt(5)
 		if hasWa {
-			wa = decimal.NewFromInt(10)
+			wa = decimal.NewFromInt(15)
 		}
 
-		ha := decimal.Zero
+		ha := decimal.NewFromInt(5)
 		if hasHa {
-			ha = decimal.NewFromInt(10)
+			ha = decimal.NewFromInt(15)
 		}
 
 		opts = append(opts, template2img.AdditionalBorders(ha, wa))

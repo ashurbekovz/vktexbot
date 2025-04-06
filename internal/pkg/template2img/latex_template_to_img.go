@@ -10,14 +10,15 @@ import (
 )
 
 type ImageParams struct {
-	crop                         bool
-	fontSizePt                   decimal.Decimal
-	minImageHeightPt             decimal.Decimal
-	minImageWidthPt              decimal.Decimal
-	minImageWidthToFontSizeRatio decimal.Decimal
-	textWidthPt                  decimal.Decimal
-	additionalImageHeightPt      decimal.Decimal
-	additionalImageWidthPt       decimal.Decimal
+	crop                          bool
+	fontSizePt                    decimal.Decimal
+	minImageHeightPt              decimal.Decimal
+	minImageWidthPt               decimal.Decimal
+	minImageWidthToFontSizeRatio  decimal.Decimal
+	minImageHeightToFontSizeRatio decimal.Decimal
+	textWidthPt                   decimal.Decimal
+	additionalImageHeightPt       decimal.Decimal
+	additionalImageWidthPt        decimal.Decimal
 }
 
 type Opt func(*ImageParams)
@@ -53,6 +54,12 @@ func MinImageWidthToFontSizeRatio(ratio decimal.Decimal) Opt {
 	}
 }
 
+func MinImageHeightToFontSizeRatio(ratio decimal.Decimal) Opt {
+	return func(imageParams *ImageParams) {
+		imageParams.minImageHeightToFontSizeRatio = ratio
+	}
+}
+
 func AdditionalBorders(heightPt, widthPt decimal.Decimal) Opt {
 	return func(imageParams *ImageParams) {
 		imageParams.additionalImageHeightPt = heightPt
@@ -62,14 +69,15 @@ func AdditionalBorders(heightPt, widthPt decimal.Decimal) Opt {
 
 func NewImageParams(opts ...Opt) (ImageParams, error) {
 	imageParams := ImageParams{
-		crop:                         false,
-		fontSizePt:                   decimal.RequireFromString("10"),
-		minImageHeightPt:             decimal.Zero,
-		minImageWidthPt:              decimal.Zero,
-		minImageWidthToFontSizeRatio: decimal.Zero,
-		textWidthPt:                  decimal.RequireFromString("236"),
-		additionalImageHeightPt:      decimal.Zero,
-		additionalImageWidthPt:       decimal.Zero,
+		crop:                          false,
+		fontSizePt:                    decimal.RequireFromString("10"),
+		minImageHeightPt:              decimal.Zero,
+		minImageWidthPt:               decimal.Zero,
+		minImageWidthToFontSizeRatio:  decimal.Zero,
+		minImageHeightToFontSizeRatio: decimal.Zero,
+		textWidthPt:                   decimal.RequireFromString("236"),
+		additionalImageHeightPt:       decimal.Zero,
+		additionalImageWidthPt:        decimal.Zero,
 	}
 
 	for _, opt := range opts {
@@ -147,8 +155,15 @@ func processImage(
 	finalHeightPt := resize.PixelToPt(int64(img.Bounds().Dy()), dpi)
 	finalWidthPt := resize.PixelToPt(int64(img.Bounds().Dx()), dpi)
 	if !params.crop {
+		initialWidthPt := finalWidthPt
+		initialHeightPt := finalHeightPt
+
 		if !params.minImageWidthToFontSizeRatio.IsZero() {
-			finalWidthPt = decimal.Max(finalWidthPt, params.fontSizePt.Mul(params.minImageWidthToFontSizeRatio))
+			finalWidthPt = decimal.Max(initialWidthPt, params.fontSizePt.Mul(params.minImageWidthToFontSizeRatio))
+		}
+
+		if !params.minImageHeightToFontSizeRatio.IsZero() {
+			finalHeightPt = decimal.Max(initialHeightPt, params.fontSizePt.Mul(params.minImageHeightToFontSizeRatio))
 		}
 
 		if !params.minImageHeightPt.IsZero() {
@@ -180,7 +195,7 @@ func substituteToTemplate(
 	lineSpacing := fontSizePt.Mul(decimal.NewFromFloat(1.2))
 
 	content := `
-\documentclass[preview]{standalone}
+\documentclass[preview,border=20pt,20pt]{standalone}
 \setlength{\textwidth}{` + textWidthPt.String() + `pt}
 \fontsize{` + fontSizePt.String() + `pt}{` + lineSpacing.String() + `pt}\selectfont
 ` + packages + `

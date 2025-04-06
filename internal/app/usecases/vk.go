@@ -3,6 +3,7 @@ package usecases
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image/png"
 	"log"
@@ -10,7 +11,9 @@ import (
 	"github.com/SevereCloud/vksdk/v3/api"
 	"github.com/SevereCloud/vksdk/v3/api/params"
 	"github.com/ashurbekovz/vktexbot/internal/app/parsers"
+	"github.com/ashurbekovz/vktexbot/internal/pkg/latex2img"
 	"github.com/ashurbekovz/vktexbot/internal/pkg/template2img"
+	"github.com/ashurbekovz/vktexbot/internal/tools/resize"
 )
 
 type VkOpt struct {
@@ -39,6 +42,11 @@ func NewVkUsecase(
 	}
 }
 
+const (
+	UnknownErrMessage = "Произошла неизвестная ошибка. Разработчики уже выясняют причину."
+	EmptyErrMessage   = "Изображение пустое. Если это ошибка — сообщите разработчику."
+)
+
 func (u *VkUsecase) Execute(
 	ctx context.Context,
 	opt VkOpt,
@@ -47,29 +55,44 @@ func (u *VkUsecase) Execute(
 
 	messageParams, err := u.parser.Parse(opt.Message)
 	if err != nil {
+		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to parse message: %w", err)
 	}
 
 	if len(messageParams.Message) == 0 {
+		u.sendErrToPeer(opt.PeerID, EmptyErrMessage)
 		return VkRes{}, fmt.Errorf("Message is empty")
 	}
 
 	img, err := u.t2i.Convert(ctx, messageParams.Message, messageParams.ImageParams)
 	if err != nil {
+		var syntaxError *latex2img.SyntaxError
+		var fullyTransparentError *resize.ImageFullyTransparentError
+		switch {
+		case errors.As(err, &syntaxError):
+			u.sendErrToPeer(opt.PeerID, syntaxError.UserError())
+		case errors.As(err, &fullyTransparentError):
+			u.sendErrToPeer(opt.PeerID, EmptyErrMessage)
+		default:
+			u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
+		}
 		return VkRes{}, fmt.Errorf("Failed to convert message to image: %w", err)
 	}
 
 	var buf bytes.Buffer
 	err = png.Encode(&buf, img)
 	if err != nil {
+		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to encode image: %v", err)
 	}
 
 	resp, err := u.vk.UploadMessagesPhoto(opt.PeerID, &buf)
 	if err != nil {
+		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to upload image: %w", err)
 	}
 	if len(resp) != 1 {
+		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Invalid response length from UploadMessagesPhoto: %d", len(resp))
 	}
 
@@ -80,8 +103,26 @@ func (u *VkUsecase) Execute(
 
 	_, err = u.vk.MessagesSend(b.Params)
 	if err != nil {
+		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to send message: %w", err)
 	}
 
+	log.Printf("Message successfully processed")
 	return VkRes{}, nil
+}
+
+func (u *VkUsecase) sendErrToPeer(peerID int, errMessage string) error {
+	log.Printf("Attempting to report a peer '%d' error with the message '%s'", peerID, errMessage)
+
+	b := params.NewMessagesSendBuilder()
+	b.RandomID(0)
+	b.PeerID(peerID)
+	b.Message(errMessage)
+
+	_, err := u.vk.MessagesSend(b.Params)
+	if err != nil {
+		return fmt.Errorf("Failed to send error message: %w", err)
+	}
+
+	return nil
 }
