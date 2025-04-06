@@ -30,11 +30,11 @@ type VkApp struct {
 }
 
 type Secret struct {
-	Token string `yaml:"vk_token"`
+	GroupID string `yaml:"vk_group_id"`
+	Token   string `yaml:"vk_token"`
 }
 
 type Config struct {
-	GroupID  string `yaml:"vk_group_id"`
 	Packages string `yaml:"packages"`
 }
 
@@ -59,7 +59,7 @@ func (a *VkApp) Run() {
 	vk := api.NewVK(secret.Token)
 
 	group, err := vk.GroupsGetByID(
-		map[string]any{"group_id": config.GroupID},
+		map[string]any{"group_id": secret.GroupID},
 	)
 	if err != nil {
 		log.Fatalf("Error getting group info: %v", err)
@@ -76,7 +76,11 @@ func (a *VkApp) Run() {
 	l2i := latex2img.NewLatexToImgConverter("./tmp/", false, decimal.NewFromInt(400))
 	t2i := template2img.NewLatexTemplateToImgConverter(&l2i, config.Packages)
 	parser := parsers.NewVk()
-	vkUC := usecases.NewVkUsecase(vk, &t2i, parser)
+	vkUC := usecases.NewVkUsecase(
+		vk,
+		&t2i,
+		parser,
+	)
 
 	lp.MessageNew(func(ctx context.Context, obj events.MessageNewObject) {
 		opt := usecases.VkOpt{
