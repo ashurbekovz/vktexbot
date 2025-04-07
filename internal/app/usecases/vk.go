@@ -79,6 +79,10 @@ func (u *VkUsecase) Execute(
 	}
 
 	messageParams, err := u.parser.Parse(opt.Message)
+	if !messageParams.Mention && isGroup(opt.PeerID) {
+		log.Printf("It's not message for us, just skip")
+		return VkRes{}, nil
+	}
 	if err != nil {
 		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
 		return VkRes{}, fmt.Errorf("Failed to parse message: %w", err)
