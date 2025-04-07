@@ -82,6 +82,7 @@ func (a *VkApp) Run() {
 		opt := usecases.VkOpt{
 			Message: obj.Message.Text,
 			PeerID:  obj.Message.PeerID,
+			Payload: obj.Message.Payload,
 		}
 
 		_, err := vkUC.Execute(ctx, opt)
@@ -95,6 +96,7 @@ func (a *VkApp) Run() {
 		opt := usecases.VkOpt{
 			Message: obj.Text,
 			PeerID:  obj.PeerID,
+			Payload: obj.Payload,
 		}
 
 		_, err := vkUC.Execute(ctx, opt)
