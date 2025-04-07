@@ -45,7 +45,7 @@ func NewVkUsecase(
 }
 
 const (
-	UnknownErrMessage = "Произошла неизвестная ошибка. Мы уже выясняем причину."
+	UnknownErrMessage = "Произошла неизвестная ошибка, мы уже выясняем причину. Возможно сработает повтор сообщения."
 	EmptyErrMessage   = "Сгенерированное изображение оказалось пустым. Если это ошибка, пожалуйста, сообщите об этом разработчику."
 )
 
@@ -80,7 +80,7 @@ func (u *VkUsecase) Execute(
 
 	messageParams, err := u.parser.Parse(opt.Message)
 	if !messageParams.Mention && isGroup(opt.PeerID) {
-		log.Printf("It's not message for us, just skip")
+		log.Printf("It's message not for us, just skip")
 		return VkRes{}, nil
 	}
 	if err != nil {
