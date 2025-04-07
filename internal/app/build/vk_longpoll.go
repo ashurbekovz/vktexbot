@@ -17,7 +17,6 @@ import (
 	"github.com/ashurbekovz/vktexbot/internal/app/usecases"
 	"github.com/ashurbekovz/vktexbot/internal/pkg/latex2img"
 	"github.com/ashurbekovz/vktexbot/internal/pkg/template2img"
-	"github.com/ashurbekovz/vktexbot/internal/tools/must"
 	"github.com/shopspring/decimal"
 
 	"os/signal"
@@ -72,8 +71,7 @@ func (a *VkApp) Run() {
 		log.Fatalf("Error creating Long Poll: %v", err)
 	}
 
-	must.Do(os.Mkdir("./tmp", 0644))
-	l2i := latex2img.NewLatexToImgConverter("./tmp/", false, decimal.NewFromInt(400))
+	l2i := latex2img.NewLatexToImgConverter("/tmp/", false, decimal.NewFromInt(400))
 	t2i := template2img.NewLatexTemplateToImgConverter(&l2i, config.Packages)
 	parser := parsers.NewVk(group.Groups[0].ID, group.Groups[0].ScreenName)
 	vkUC := usecases.NewVkUsecase(vk, &t2i, parser)
