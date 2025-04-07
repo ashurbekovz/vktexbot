@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/ashurbekovz/vktexbot/compare/v0.4.0...v0.5.0) (2025-04-07)
+
+
+### Features
+
+* add button to help user ([0598041](https://github.com/ashurbekovz/vktexbot/commit/0598041b1a03db35cd94ba33b1c0fac9c4e3a429))
+
+
+### Bug Fixes
+
+* skip message in group chats if bot not mentioned ([6da249e](https://github.com/ashurbekovz/vktexbot/commit/6da249ea7a76ec7dca9d49bc9e9e24d38abf5317))
+
 ## [0.4.0](https://github.com/ashurbekovz/vktexbot/compare/v0.3.0...v0.4.0) (2025-04-06)
 
 
