@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/ashurbekovz/vktexbot/compare/v0.5.0...v0.5.1) (2025-04-07)
+
+
+### Bug Fixes
+
+* increase compile timeout ([56ce5aa](https://github.com/ashurbekovz/vktexbot/commit/56ce5aaec71ab67a84b2e3173f765d7537fd8561))
+
 ## [0.5.0](https://github.com/ashurbekovz/vktexbot/compare/v0.4.0...v0.5.0) (2025-04-07)
 
 
