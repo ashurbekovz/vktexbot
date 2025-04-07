@@ -1,5 +1,6 @@
-SSH_USER = # Fill this
-SSH_HOST = # Fill this
+# Fill fields and rename to Makefile
+SSH_USER = root    # Fill this
+SSH_HOST = X.X.X.X # Fill this
 
 ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_ROOT := $(abspath $(ROOT_DIR)/..)
