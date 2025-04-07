@@ -6,8 +6,6 @@ RUN apt-get install -y dvipng
 RUN apt-get install -y golang-go
 
 RUN sed -i 's/openin_any =*/openin_any = p/' /usr/share/texlive/texmf-dist/web2c/texmf.cnf && mktexlsr
-RUN mktextfm larm0700
-RUN mktextfm larm1000
 
 WORKDIR /app
 COPY go.mod go.sum ./

@@ -72,7 +72,7 @@ func CompileLatex(
 
 	latexCmd := exec.CommandContext(
 		ctx,
-		"timeout", "3s",
+		"timeout", "10s",
 		"prlimit", "--as=500000000",
 		"/usr/bin/latexmk",
 		"-dvi",

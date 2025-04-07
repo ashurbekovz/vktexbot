@@ -22,10 +22,7 @@ RUN apt-get update && \
     dvipng && \
     rm -rf /var/lib/apt/lists/*
 
-RUN sed -i 's/openin_any =.*/openin_any = p/' /usr/share/texlive/texmf-dist/web2c/texmf.cnf && \
-    mktexlsr && \
-    mktextfm larm0700 && \
-    mktextfm larm1000
+RUN sed -i 's/openin_any =.*/openin_any = p/' /usr/share/texlive/texmf-dist/web2c/texmf.cnf
 
 WORKDIR /app
 COPY --from=builder /app/vktexbot /app/vktexbot
