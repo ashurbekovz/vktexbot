@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/ashurbekovz/vktexbot/internal/app/build"
 	"log"
+	"os"
+
+	"github.com/ashurbekovz/vktexbot/internal/app/build"
 )
 
 func main() {
@@ -11,16 +13,26 @@ func main() {
 	secretPath := flag.String("secret", "", "Path to the secret file")
 	flag.Parse()
 
-	if *configPath == "" {
-		log.Fatal("config path is required")
+	config := os.Getenv("CONFIG_PATH")
+	if config == "" {
+		config = *configPath
+	}
+
+	secret := os.Getenv("SECRET_PATH")
+	if secret == "" {
+		secret = *secretPath
+	}
+
+	if config == "" {
+		log.Fatal("config path is required (set via CONFIG_PATH env var or --config flag)")
 		return
 	}
 
-	if *secretPath == "" {
-		log.Fatal("secret path is required")
+	if secret == "" {
+		log.Fatal("secret path is required (set via SECRET_PATH env var or --secret flag)")
 		return
 	}
 
-	app := build.NewVkApp(*configPath, *secretPath)
+	app := build.NewVkApp(config, secret)
 	app.Run()
 }
