@@ -37,17 +37,4 @@ make run_cmd
 
 ### Server deployment
 
-Ruquire docker on remote machine
-
-```bash
-# 1. Copy and configure the secret file
-cp configs/secret.example.yaml configs/secret.yaml
-
-cd deploy
-
-# 2. Copy and configure Makefile
-cp Makefile.example Makefile
-
-# 3. Deploy
-make deploy
-```
+Use `deploy/Dockerfile`.
