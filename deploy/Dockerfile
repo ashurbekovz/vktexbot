@@ -18,7 +18,15 @@ FROM ubuntu:24.10
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    texlive-full \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-latex-recommended \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-lang-cyrillic \
+    texlive-science \
+    texlive-pictures \
+    latexmk \
     dvipng && \
     rm -rf /var/lib/apt/lists/*
 
@@ -26,7 +34,5 @@ RUN sed -i 's/openin_any =.*/openin_any = p/' /usr/share/texlive/texmf-dist/web2
 
 WORKDIR /app
 COPY --from=builder /app/vktexbot /app/vktexbot
-COPY configs/config.yaml /app/config.yaml
-COPY configs/secret.yaml /app/secret.yaml
 
-CMD ["/app/vktexbot", "-config", "/app/config.yaml", "-secret", "/app/secret.yaml"]
+CMD ["/app/vktexbot"]
