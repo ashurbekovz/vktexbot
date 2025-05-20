@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/ashurbekovz/vktexbot/compare/v0.5.1...v0.6.0) (2025-05-20)
+
+
+### Features
+
+* add environment variables support for config/secret paths ([b66c614](https://github.com/ashurbekovz/vktexbot/commit/b66c614111166b0bed700933a8bf8dfd6d9f6444))
+
 ## [0.5.1](https://github.com/ashurbekovz/vktexbot/compare/v0.5.0...v0.5.1) (2025-04-07)
 
 
