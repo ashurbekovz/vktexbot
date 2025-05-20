@@ -1,7 +1,16 @@
 FROM ubuntu:24.10
 
 RUN apt-get update
-RUN apt-get install -y texlive-full 
+RUN apt-get install -y \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-latex-recommended \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-lang-cyrillic \
+    texlive-science \
+    texlive-pictures
+RUN apt-get install -y latexmk
 RUN apt-get install -y dvipng
 RUN apt-get install -y golang-go
 
