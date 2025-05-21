@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/ashurbekovz/vktexbot/compare/v0.6.0...v0.6.1) (2025-05-21)
+
+
+### Bug Fixes
+
+* use alpine for deploy docker image builder ([16ba0a5](https://github.com/ashurbekovz/vktexbot/commit/16ba0a59d8ef8df61ca5a2153d9ec1a11fbb9104))
+
 ## [0.6.0](https://github.com/ashurbekovz/vktexbot/compare/v0.5.1...v0.6.0) (2025-05-20)
 
 
