@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/ashurbekovz/vktexbot/compare/v0.6.1...v0.6.2) (2025-05-21)
+
+
+### Bug Fixes
+
+* increase dvipng timeout ([b240846](https://github.com/ashurbekovz/vktexbot/commit/b2408466283be26468044ef8588243a98cbace97))
+
 ## [0.6.1](https://github.com/ashurbekovz/vktexbot/compare/v0.6.0...v0.6.1) (2025-05-21)
 
 
