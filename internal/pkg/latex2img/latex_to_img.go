@@ -99,7 +99,7 @@ func dvi2img(
 ) (image.Image, error) {
 	dvipngCmd := exec.CommandContext(
 		ctx,
-		"timeout", "2s",
+		"timeout", "10s",
 		"prlimit", "--as=500000000",
 		"dvipng",
 		"-D", dpi.String(),
