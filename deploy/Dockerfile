@@ -1,10 +1,5 @@
-FROM ubuntu:24.10 AS builder
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    golang-go \
-    ca-certificates \
-    git
+FROM golang:1.24-alpine AS builder
+RUN apk add --no-cache git ca-certificates
 
 WORKDIR /app
 COPY go.mod go.sum ./
