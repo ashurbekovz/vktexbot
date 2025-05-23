@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/ashurbekovz/vktexbot/compare/v0.6.2...v0.7.0) (2025-05-23)
+
+
+### Features
+
+* make logs structured ([de12301](https://github.com/ashurbekovz/vktexbot/commit/de12301bcf1e3bf448d03a5605762650b21b0f3d))
+
 ## [0.6.2](https://github.com/ashurbekovz/vktexbot/compare/v0.6.1...v0.6.2) (2025-05-21)
 
 
