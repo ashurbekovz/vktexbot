@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"image/png"
-	"log"
+	"log/slog"
 
 	"github.com/SevereCloud/vksdk/v3/api"
 	"github.com/SevereCloud/vksdk/v3/api/params"
@@ -18,9 +18,10 @@ import (
 )
 
 type VkOpt struct {
-	PeerID  int
-	Message string
-	Payload string
+	PeerID       int
+	Message      string
+	Payload      string
+	IsNewMessage bool
 }
 
 type VkRes struct {
@@ -51,46 +52,46 @@ const (
 
 func (u *VkUsecase) Execute(
 	ctx context.Context,
+	logger *slog.Logger,
 	opt VkOpt,
 ) (VkRes, error) {
-	log.Printf(
-		"Received message from peer %d.\nText:\n%s\n",
-		opt.PeerID,
-		opt.Message,
-	)
-
-	if opt.Payload != "" {
-		log.Printf("Message has payload '%s'\n", opt.Payload)
-
-		if opt.Payload == `"help"` {
-			b := params.NewMessagesSendBuilder()
-			b.RandomID(0)
-			b.PeerID(opt.PeerID)
-			b.Message("Текст нужно вводить в LaTeX формате, заключая математические формулы в $ ... $, $$ ... $$ или их аналоги. Пример корректного сообщения:\n\nVkTeX $\\int_a^b f(x) \\, dx$ \n\nС подробным описанием функций можно ознакомиться по ссылке.")
-			b.Keyboard(inlineHelpKeyboard())
-
-			_, err := u.vk.MessagesSend(b.Params)
-			if err != nil {
-				u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
-				return VkRes{}, fmt.Errorf("Failed to send message: %w", err)
-			}
-			return VkRes{}, nil
-		}
-	}
-
 	messageParams, err := u.parser.Parse(opt.Message)
 	if !messageParams.Mention && isGroup(opt.PeerID) {
-		log.Printf("It's message not for us, just skip")
 		return VkRes{}, nil
 	}
+
+	logger.Info(
+		"processing message",
+		"message", opt.Message,
+		"peer_id", opt.PeerID,
+		"payload", opt.Payload,
+		"is_new_message", opt.IsNewMessage,
+		"is_group", isGroup(opt.PeerID),
+	)
+
+	if opt.Payload != "" && opt.Payload == `"help"` {
+		b := params.NewMessagesSendBuilder()
+		b.RandomID(0)
+		b.PeerID(opt.PeerID)
+		b.Message("Текст нужно вводить в LaTeX формате, заключая математические формулы в $ ... $, $$ ... $$ или их аналоги. Пример корректного сообщения:\n\nVkTeX $\\int_a^b f(x) \\, dx$ \n\nС подробным описанием функций можно ознакомиться по ссылке.")
+		b.Keyboard(inlineHelpKeyboard())
+
+		_, err := u.vk.MessagesSend(b.Params)
+		if err != nil {
+			u.sendErrToPeer(logger, opt.PeerID, UnknownErrMessage)
+			return VkRes{}, fmt.Errorf("failed to send message: %w", err)
+		}
+		return VkRes{}, nil
+	}
+
 	if err != nil {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
-		return VkRes{}, fmt.Errorf("Failed to parse message: %w", err)
+		u.sendErrToPeer(logger, opt.PeerID, UnknownErrMessage)
+		return VkRes{}, fmt.Errorf("failed to parse message: %w", err)
 	}
 
 	if len(messageParams.Message) == 0 {
-		u.sendErrToPeer(opt.PeerID, EmptyErrMessage)
-		return VkRes{}, fmt.Errorf("Message is empty")
+		u.sendErrToPeer(logger, opt.PeerID, EmptyErrMessage)
+		return VkRes{}, nil
 	}
 
 	img, err := u.t2i.Convert(ctx, messageParams.Message, messageParams.ImageParams)
@@ -99,30 +100,32 @@ func (u *VkUsecase) Execute(
 		var fullyTransparentError *resize.ImageFullyTransparentError
 		switch {
 		case errors.As(err, &syntaxError):
-			u.sendErrToPeer(opt.PeerID, syntaxError.UserError())
+			u.sendErrToPeer(logger, opt.PeerID, syntaxError.UserError())
+			return VkRes{}, nil
 		case errors.As(err, &fullyTransparentError):
-			u.sendErrToPeer(opt.PeerID, EmptyErrMessage)
+			u.sendErrToPeer(logger, opt.PeerID, EmptyErrMessage)
+			return VkRes{}, nil
 		default:
-			u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
+			u.sendErrToPeer(logger, opt.PeerID, UnknownErrMessage)
+			return VkRes{}, fmt.Errorf("failed to convert message to image: %w", err)
 		}
-		return VkRes{}, fmt.Errorf("Failed to convert message to image: %w", err)
 	}
 
 	var buf bytes.Buffer
 	err = png.Encode(&buf, img)
 	if err != nil {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
-		return VkRes{}, fmt.Errorf("Failed to encode image: %v", err)
+		u.sendErrToPeer(logger, opt.PeerID, UnknownErrMessage)
+		return VkRes{}, fmt.Errorf("failed to encode image: %v", err)
 	}
 
 	resp, err := u.vk.UploadMessagesPhoto(opt.PeerID, &buf)
 	if err != nil {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
-		return VkRes{}, fmt.Errorf("Failed to upload image: %w", err)
+		u.sendErrToPeer(logger, opt.PeerID, UnknownErrMessage)
+		return VkRes{}, fmt.Errorf("failed to upload image: %w", err)
 	}
 	if len(resp) != 1 {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
-		return VkRes{}, fmt.Errorf("Invalid response length from UploadMessagesPhoto: %d", len(resp))
+		u.sendErrToPeer(logger, opt.PeerID, UnknownErrMessage)
+		return VkRes{}, fmt.Errorf("invalid response length from UploadMessagesPhoto: %d", len(resp))
 	}
 
 	b := params.NewMessagesSendBuilder()
@@ -135,16 +138,19 @@ func (u *VkUsecase) Execute(
 
 	_, err = u.vk.MessagesSend(b.Params)
 	if err != nil {
-		u.sendErrToPeer(opt.PeerID, UnknownErrMessage)
-		return VkRes{}, fmt.Errorf("Failed to send message: %w", err)
+		u.sendErrToPeer(logger, opt.PeerID, UnknownErrMessage)
+		return VkRes{}, fmt.Errorf("failed to send message: %w", err)
 	}
 
-	log.Printf("Message successfully processed")
 	return VkRes{}, nil
 }
 
-func (u *VkUsecase) sendErrToPeer(peerID int, errMessage string) error {
-	log.Printf("Attempting to report a peer '%d' error with the message '%s'", peerID, errMessage)
+func (u *VkUsecase) sendErrToPeer(
+	logger *slog.Logger,
+	peerID int,
+	errMessage string,
+) {
+	logger.Info("attempting report to peer error", "err_message", errMessage)
 
 	b := params.NewMessagesSendBuilder()
 	b.RandomID(0)
@@ -155,10 +161,8 @@ func (u *VkUsecase) sendErrToPeer(peerID int, errMessage string) error {
 	}
 	_, err := u.vk.MessagesSend(b.Params)
 	if err != nil {
-		return fmt.Errorf("Failed to send error message: %w", err)
+		logger.Error("failed report to peer error", "error", err)
 	}
-
-	return nil
 }
 
 func isGroup(peerID int) bool {
